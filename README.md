@@ -40,66 +40,43 @@ A comunicação ocorre via **FFI nativa** (Foreign Function Interface), sem rede
 ## Arquitetura
 
 ```mermaid
-flowchart TB
+flowchart LR
     subgraph JAVA ["☕ Java (JVM)"]
-        direction TB
-        A["HttpServletRequest\n(jakarta.servlet)"]
-        B["H2SServletHandler\nimplements HttpRequestHandler\n@Component('/h2s/**')"]
-        C["HttpServletRequestAdapter"]
-        D["RawRequestData\nrecord"]
-        E["H2SRegistry\nConcurrentHashMap&lt;String, NativeBridge&gt;"]
-        F["NativeBridge\ninterface"]
-        G["NativeHorseBridgeImpl\nimplements NativeBridge"]
-        H["NativeLibraryBinderImpl\nimplements NativeLibrary"]
-        I["MethodHandle\n(java.lang.foreign)"]
-
-        A -->|"handleRequest()"| B
-        B -->|"new"| C
-        C -->|"getRawRequestData()"| D
-        D -->|"serialize JSON"| G
-        B -->|"getBridge(name)"| E
-        E -->|"lookup"| F
-        F -->|"impl"| G
-        G -->|"uses"| H
-        H -->|"downcall"| I
+        A["H2SServletHandler\n« HttpRequestHandler »"]
+        B["H2SRegistry"]
+        C{{"« NativeBridge »\ninterface"}}
+        D["NativeHorseBridgeImpl"]
+        E{{"« NativeLibrary »\ninterface"}}
     end
 
-    subgraph FFI ["⚡ Fronteira Nativa — FFM API (zero rede, memória direta)"]
-        J["FF_HandleRequest\nPUTF8Char cdecl export"]
+    subgraph FFI ["⚡ FFI — java.lang.foreign"]
+        F(["FF_Initialize\nFF_HandleRequest\nFF_ReclaimMemory"])
     end
 
-    subgraph DELPHI ["🏇 Delphi (DLL nativa)"]
-        direction TB
-        K["TH2S\nclass"]
-        L["TRequestPipelineContext\nclass"]
-        M["TServletAdaptedWebRequestAdapter\nextends TInterfacedWebRequest"]
-        N["TServletAdaptedRawRequest\nimplements IHorseRawRequest"]
-        O["TServletAdaptedWebResponseAdapter\nextends TInterfacedWebResponse"]
-        P["TServletAdaptedRawResponse\nimplements IHorseRawResponse"]
-        Q["THorse.Execute\n(Horse framework)"]
-        R["TRawResponseData\nrecord"]
-
-        K -->|"Deserialize JSON → TRawRequestData"| L
-        L -->|"new"| M
-        M -->|"wraps"| N
-        L -->|"new"| O
-        O -->|"wraps"| P
-        L -->|"Request + Response"| Q
-        Q -->|"executa rotas/middlewares"| R
-        R -->|"Serialize JSON → PUTF8Char"| J
+    subgraph DELPHI ["🏇 Delphi / Pascal (DLL)"]
+        G["THorseProviderH2S\n« THorseProviderAbstract »"]
+        H{{"« IHorseRawRequest »"}}
+        I{{"« IHorseRawResponse »"}}
+        J["THorse.Execute"]
     end
 
-    I -->|"invoke FF_HandleRequest"| J
-    J -->|"chama"| K
+    HTTP(["HTTP Request"]) --> A
+    A -->|"getBridge(name)"| B
+    B --> C
+    C -.->|"impl"| D
+    D --> E
+    E -->|"MethodHandle downcall"| F
 
-    subgraph RESP ["↩ Resposta (Java)"]
-        S["NativeHorseBridgeImpl\nRawResponseData deserializado"]
-        T["H2SServletHandler\nHttpServletResponse.write()"]
-    end
+    F -->|"JSON UTF-8"| G
+    G --> H
+    G --> I
+    H & I --> J
+    J -->|"JSON UTF-8"| F
 
-    J -->|"retorna ponteiro + FF_ReclaimMemory"| S
-    S --> T
+    F -->|"RawResponseData"| D
+    D -->|"HttpServletResponse"| HTTP2(["HTTP Response"])
 ```
+
 
 
 ---
