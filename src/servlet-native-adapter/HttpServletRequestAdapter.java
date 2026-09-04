@@ -1,4 +1,4 @@
-package io.h2s;
+package br.com.shopweb.h2s;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,7 +40,7 @@ public class HttpServletRequestAdapter {
         this.localHost = servletRequest.getLocalName();
         this.remoteAddress = servletRequest.getRemoteAddr();
         this.remotePort = servletRequest.getRemotePort();
-        this.fullPath = servletRequest.getRequestURI().replace( prefixPath, "" );
+        this.fullPath = "/" + servletRequest.getRequestURI().replace( prefixPath, "" );
         this.pathInfo = this.fullPath;
         this.cookies = extractCookies( servletRequest );
         this.queryString = servletRequest.getQueryString();
@@ -50,7 +50,6 @@ public class HttpServletRequestAdapter {
         try ( BufferedReader bufferedReader = request.getReader() ) {
             if ( bufferedReader == null )
                 return null;
-
             return bufferedReader
                 .lines()
                 .collect( Collectors.joining( System.lineSeparator() ) );

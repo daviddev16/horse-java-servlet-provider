@@ -62,7 +62,9 @@ end;
 function TRequestPipelineContext.GetRawResponseData(): TRawResponseData;
 begin
   Result.Body := FHorseResponse.RawWebResponse.Content;
+  Result.ContentType := FHorseResponse.RawWebResponse.ContentType;
   Result.StatusCode := FHorseResponse.RawWebResponse.StatusCode;
+  Result.ContentLength := Length(Result.Body);
 end;
 
 procedure TRequestPipelineContext.SetRequestData(const Value: TRawRequestData);

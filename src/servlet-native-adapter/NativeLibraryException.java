@@ -1,4 +1,4 @@
-package io.h2s;
+package br.com.shopweb.h2s;
 
 public class NativeLibraryException extends RuntimeException {
 

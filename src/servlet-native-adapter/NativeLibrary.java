@@ -1,4 +1,4 @@
-package io.h2s;
+package br.com.shopweb.h2s;
 
 import java.lang.invoke.MethodHandle;
 

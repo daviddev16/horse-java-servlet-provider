@@ -1,4 +1,4 @@
-package io.h2s;
+package br.com.shopweb.h2s;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -19,22 +19,22 @@ public class H2SRegistry {
 
         try {
             NativeLibrary loadedLibrary = new NativeLibraryBinderImpl( libraryPath );
-            bridges.put( name, createNativeBridge( loadedLibrary ) );
+            bridges.put( name, new NativeHorseBridgeImpl( loadedLibrary ) );
         } catch ( Throwable t ) {
             throw new NativeLibraryException( "Failed to load native library : " + libraryPath, t );
         }
-    }
-
-    private static NativeBridge createNativeBridge(NativeLibrary library) {
-        NativeBridge bridge = new NativeHorseBridgeImpl( library );
-        bridge.initialize();
-        return bridge;
     }
 
     public static NativeBridge getBridge(String name) {
         final NativeBridge bridge = bridges.get( name );
         if ( bridge == null )
             throw new NativeLibraryException( "No native library registered with name : " + name );
+        if ( !bridge.loaded() ) {
+            synchronized ( bridge ) {
+                if ( !bridge.loaded() )
+                    bridge.initialize();
+            }
+        }
         return bridge;
     }
 

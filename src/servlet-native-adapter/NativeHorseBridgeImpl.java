@@ -1,4 +1,4 @@
-package io.h2s;
+package br.com.shopweb.h2s;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -9,6 +9,7 @@ public class NativeHorseBridgeImpl implements NativeBridge {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    private boolean loaded;
     private final NativeLibrary library;
 
     public NativeHorseBridgeImpl(NativeLibrary library) {
@@ -39,9 +40,15 @@ public class NativeHorseBridgeImpl implements NativeBridge {
     }
 
     @Override
+    public boolean loaded() {
+        return loaded;
+    }
+
+    @Override
     public void initialize() {
         try {
             library.getInitializeMHandle().invoke();
+            loaded = true;
         } catch (Throwable e) {
             throw new NativeLibraryException( "Failed to initialize bridge", e );
         }

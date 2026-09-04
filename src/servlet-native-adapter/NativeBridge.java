@@ -1,6 +1,8 @@
-package io.h2s;
+package br.com.shopweb.h2s;
 
 public interface NativeBridge {
+
+    boolean loaded();
 
     void initialize();
 
